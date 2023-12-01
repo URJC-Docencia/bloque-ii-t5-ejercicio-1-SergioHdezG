@@ -88,12 +88,23 @@ public class ELGraph<V,E> implements Graph<V,E> {
 
     @Override
     public Edge<E> areAdjacent(Vertex<V> v1, Vertex<V> v2) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        ELVertex<V> vertex1 = checkVertex(v1);
+        ELVertex<V> vertex2 = checkVertex(v2);
+
+        for (ELEdge<V, E> edge : edgeSet){
+            if (this.opposite(vertex1, edge).equals(vertex2)){
+                return edge;
+            }
+        }
+        return null;
     }
 
     @Override
     public V replace(Vertex<V> vertex, V vertexValue) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        ELVertex<V> v = checkVertex(vertex);
+        V aux = v.getElement();
+        v.setElement(vertexValue);
+        return aux;
     }
 
     @Override
@@ -103,22 +114,48 @@ public class ELGraph<V,E> implements Graph<V,E> {
 
     @Override
     public Vertex<V> insertVertex(V value) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        ELVertex<V> newVertex = new ELVertex<>(value, this);
+        this.vertexSet.add(newVertex);
+        return newVertex;
     }
 
     @Override
     public Edge<E> insertEdge(Vertex<V> v1, Vertex<V> v2, E edgeValue) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        if (this.vertexSet.contains(v1) && this.vertexSet.contains(v2)){
+            ELEdge<V, E> newEdge = new ELEdge<>(edgeValue, checkVertex(v1), checkVertex(v2), this);
+            Edge<E> adjacent = this.areAdjacent(v1, v2);
+            
+            if (adjacent==null){
+                edgeSet.add(newEdge);
+            }
+            else{
+                // Podemos sobreescribir el valor del értice que ya exisitía o podemos lanzar una excepción.
+                throw new RuntimeException("There is already an edge between v1 and v2.");
+            }
+        }
+        throw new RuntimeException("v1 or v2 do not belong to this graph.");
     }
 
     @Override
     public V removeVertex(Vertex<V> vertex) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        ELVertex<V> v = checkVertex(vertex);
+        V aux = v.getElement();
+        Set<ELEdge<V, E>> removeSet = new HashSet<>();
+        for (ELEdge<V, E> edge : this.edgeSet){
+            if (edge.getStarVertex().equals(v) || edge.getEndVertex().equals(v)){
+                removeSet.add(edge);
+            }
+        }
+        this.edgeSet.removeAll(removeSet);
+        return aux;
     }
 
     @Override
     public E removeEdge(Edge<E> edge) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        ELEdge<V, E> removeEdge = checkEdge(edge);
+        E aux = removeEdge.getElement();
+        this.edgeSet.remove(removeEdge);
+        return aux;
     }
 }
 
@@ -138,7 +175,7 @@ class ELVertex<V> implements Vertex<V>{
     }
     @Override
     public V getElement() {
-        return null;
+        return element;
     }
 
     public Graph getGraph() {
@@ -161,7 +198,7 @@ class ELEdge<V, E> implements Edge<E>{
     }
     @Override
     public E getElement() {
-        return null;
+        return element;
     }
 
     public void setElement(E element) {
